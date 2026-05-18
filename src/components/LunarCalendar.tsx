@@ -84,7 +84,15 @@ const LunarCalendar = () => {
           <div className="dashboard-grid">
             <div className="status-row">
               <div className="phase-info">
-                <h2>{moonInfo ? getPhaseName(moonInfo.phase) : '---'}</h2>
+                <div className="phase-header">
+                  <h2>{moonInfo ? getPhaseName(moonInfo.phase) : '---'}</h2>
+                  <span className="illumination-tag">
+                    {moonInfo ? `${Math.round(moonInfo.fraction * 100)}% ILLUM` : '--%'}
+                  </span>
+                </div>
+                <div className="lunar-date-readout">
+                  LUNAR DAY {moonInfo ? (Math.floor(moonInfo.phase * 29.53) + 1).toString().padStart(2, '0') : '--'}
+                </div>
                 <div className="date-readout">
                   {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' . ')}
                 </div>

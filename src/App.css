@@ -118,10 +118,35 @@ body, html {
   align-items: flex-end;
 }
 
+.phase-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
 .phase-info h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
+}
+
+.illumination-tag {
+  font-size: 0.65rem;
+  background: var(--accent-bg);
+  color: var(--accent-color);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.lunar-date-readout {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2px;
+  margin: 0.2rem 0;
+  font-family: var(--mono);
 }
 
 .date-readout {
