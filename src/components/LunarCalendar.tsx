@@ -85,6 +85,9 @@ const LunarCalendar = () => {
 
   return (
     <div className="lunar-container full-display">
+      <div className="hud-vignette"></div>
+      <div className="hud-scanline"></div>
+      
       <div className="canvas-wrapper">
         <Canvas shadows gl={{ antialias: true }}>
           <PerspectiveCamera makeDefault position={[0, 0, 10]} />
