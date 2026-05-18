@@ -4,7 +4,7 @@ import { OrbitControls, Stars, PerspectiveCamera, Float } from '@react-three/dre
 import SunCalc from 'suncalc';
 import Moon from './Moon';
 import PhaseChart from './PhaseChart';
-import { MapPin, Compass, RotateCcw, Calendar, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, Compass, RotateCcw, Calendar, Bot } from 'lucide-react';
 import { getLunarCalendarInfo, getAIInsight } from '../utils/calendarUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -16,9 +16,9 @@ const LunarCalendar = () => {
   });
   
   const [locationName, setLocationName] = useState<string>("Detecting...");
-  const [showCalendars, setShowCalendars] = useState(false);
-  const [aiInsight, setAiInsight] = useState<string>("");
+  const [aiInsight, setAiInsight] = useState<{ title: string; content: string }>({ title: "", content: "" });
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'status' | 'calendars' | 'ai'>('status');
 
   const moonInfo = useMemo(() => SunCalc.getMoonIllumination(date), [date]);
   const calendarInfo = useMemo(() => getLunarCalendarInfo(date), [date]);
@@ -27,6 +27,8 @@ const LunarCalendar = () => {
     const fetchAi = async () => {
       if (moonInfo) {
         setIsAiLoading(true);
+        // Artificial delay for 'processing' effect
+        await new Promise(r => setTimeout(r, 800));
         const insight = await getAIInsight(moonInfo.phase);
         setAiInsight(insight);
         setIsAiLoading(false);
@@ -34,6 +36,7 @@ const LunarCalendar = () => {
     };
     fetchAi();
   }, [date, moonInfo]);
+
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -119,95 +122,130 @@ const LunarCalendar = () => {
         </header>
 
         <main className="hud-dashboard">
+          <div className="tab-navigation">
+            <button className={activeTab === 'status' ? 'active' : ''} onClick={() => setActiveTab('status')}>DATA</button>
+            <button className={activeTab === 'calendars' ? 'active' : ''} onClick={() => setActiveTab('calendars')}>SYSTEMS</button>
+            <button className={activeTab === 'ai' ? 'active' : ''} onClick={() => setActiveTab('ai')}>AI INSIGHT</button>
+          </div>
+
           <div className="dashboard-grid">
-            <div className="status-row">
-              <div className="phase-info">
-                <div className="phase-header">
-                  <h2>{moonInfo ? getPhaseName(moonInfo.phase) : '---'}</h2>
-                  <span className="illumination-tag">
-                    {moonInfo ? `${Math.round(moonInfo.fraction * 100)}% ILLUM` : '--%'}
-                  </span>
-                </div>
-                <div className="lunar-date-readout">
-                  LUNAR DAY {moonInfo ? (Math.floor(moonInfo.phase * 29.53) + 1).toString().padStart(2, '0') : '--'}
-                </div>
-                <div className="date-readout">
-                  {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' . ')}
-                </div>
-              </div>
-              <button className="reset-btn" onClick={() => setDate(new Date())}>
-                <RotateCcw size={14} />
-                <span>SYNC</span>
-              </button>
-            </div>
+            <AnimatePresence mode="wait">
+              {activeTab === 'status' && (
+                <motion.div 
+                  key="status"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="tab-content"
+                >
+                  <div className="status-row">
+                    <div className="phase-info">
+                      <div className="phase-header">
+                        <h2>{moonInfo ? getPhaseName(moonInfo.phase) : '---'}</h2>
+                        <span className="illumination-tag">
+                          {moonInfo ? `${Math.round(moonInfo.fraction * 100)}% ILLUM` : '--%'}
+                        </span>
+                      </div>
+                      <div className="lunar-date-readout">
+                        LUNAR DAY {moonInfo ? (Math.floor(moonInfo.phase * 29.53) + 1).toString().padStart(2, '0') : '--'}
+                      </div>
+                      <div className="date-readout">
+                        {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' . ')}
+                      </div>
+                    </div>
+                    <button className="reset-btn" onClick={() => setDate(new Date())}>
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                  
+                  <div className="control-panel">
+                    <div className="scrubber-label">
+                      <span>Temporal Scrubber</span>
+                      <div className="live-indicator-group">
+                        <div className="live-indicator"></div>
+                        <span style={{ fontSize: '0.6rem', marginLeft: '0.4rem' }}>LIVE</span>
+                      </div>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="-15" 
+                      max="15" 
+                      value={sliderValue} 
+                      onChange={handleSliderChange}
+                      className="time-slider"
+                    />
+                    <div className="slider-markers">
+                      <span>-15D</span>
+                      <span className={sliderValue === 0 ? 'marker-now' : ''}>
+                        {sliderValue === 0 ? 'TODAY' : `${sliderValue > 0 ? '+' : ''}${sliderValue}D`}
+                      </span>
+                      <span>+15D</span>
+                    </div>
+                    <div className="chart-wrapper hide-mobile">
+                      <PhaseChart date={date} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-            <div className="ai-insight-panel">
-              <div className="panel-header">
-                <Bot size={14} className="ai-icon" />
-                <span>Lunar AI Assistant</span>
-              </div>
-              <p className={isAiLoading ? 'ai-loading' : ''}>
-                {isAiLoading ? "Processing lunar data..." : aiInsight}
-              </p>
-            </div>
-
-            <div className="calendar-expander">
-              <button className="expander-trigger" onClick={() => setShowCalendars(!showCalendars)}>
-                <span>System Calendars</span>
-                {showCalendars ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-              </button>
-              <AnimatePresence>
-                {showCalendars && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="calendar-details"
-                  >
-                    <div className="cal-item">
-                      <span className="cal-label">Islamic</span>
+              {activeTab === 'calendars' && (
+                <motion.div 
+                  key="calendars"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="tab-content"
+                >
+                  <div className="calendar-details-static">
+                    <div className="cal-item highlight">
+                      <span className="cal-label">Islamic (Hijri)</span>
                       <span className="cal-value">{calendarInfo.islamic}</span>
                     </div>
                     <div className="cal-item">
-                      <span className="cal-label">Chinese</span>
+                      <span className="cal-label">Chinese Lunar</span>
                       <span className="cal-value">{calendarInfo.chinese}</span>
                     </div>
                     <div className="cal-item">
-                      <span className="cal-label">Hindu</span>
+                      <span className="cal-label">Hindu (Panchang)</span>
                       <span className="cal-value">{calendarInfo.hindu}</span>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </motion.div>
+              )}
 
-            <div className="control-panel">
-              <div className="scrubber-label">
-                <span>Temporal Scrubber</span>
-                <div className="live-indicator-group">
-                  <div className="live-indicator"></div>
-                  <span style={{ fontSize: '0.6rem', marginLeft: '0.4rem' }}>LIVE FEED</span>
-                </div>
-              </div>
-              <input 
-                type="range" 
-                min="-15" 
-                max="15" 
-                value={sliderValue} 
-                onChange={handleSliderChange}
-                className="time-slider"
-              />
-              <div className="slider-markers">
-                <span>-15D</span>
-                <span className={sliderValue === 0 ? 'marker-now' : ''}>
-                  {sliderValue === 0 ? 'TODAY' : `${sliderValue > 0 ? '+' : ''}${sliderValue}D`}
-                </span>
-                <span>+15D</span>
-              </div>
-              <div className="chart-wrapper hide-mobile">
-                <PhaseChart date={date} />
-              </div>
-            </div>
+              {activeTab === 'ai' && (
+                <motion.div 
+                  key="ai"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="tab-content"
+                >
+                  <div className="ai-insight-panel-full">
+                    <div className="ai-status">
+                      <Bot size={18} className="ai-icon-pulsing" />
+                      <div className="ai-title-group">
+                        <span className="ai-tag">QUANTUM ANALYZER</span>
+                        <h3 className={isAiLoading ? 'glow-text' : ''}>
+                          {isAiLoading ? "SCANNING SECTORS..." : aiInsight.title}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="ai-body">
+                      {isAiLoading ? (
+                        <div className="loading-bars">
+                          <div className="bar"></div>
+                          <div className="bar"></div>
+                          <div className="bar"></div>
+                        </div>
+                      ) : (
+                        <p className="typewriter">{aiInsight.content}</p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </main>
       </div>
