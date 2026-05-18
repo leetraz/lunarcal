@@ -4,7 +4,9 @@ import { OrbitControls, Stars, PerspectiveCamera, Float } from '@react-three/dre
 import SunCalc from 'suncalc';
 import Moon from './Moon';
 import PhaseChart from './PhaseChart';
-import { MapPin, Compass, RotateCcw } from 'lucide-react';
+import { MapPin, Compass, RotateCcw, Calendar, Bot, ChevronDown, ChevronUp } from 'lucide-react';
+import { getLunarCalendarInfo, getAIInsight } from '../utils/calendarUtils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const LunarCalendar = () => {
   const [date, setDate] = useState(() => {
@@ -13,8 +15,25 @@ const LunarCalendar = () => {
     return d;
   });
   
-  const moonInfo = useMemo(() => SunCalc.getMoonIllumination(date), [date]);
   const [locationName, setLocationName] = useState<string>("Detecting...");
+  const [showCalendars, setShowCalendars] = useState(false);
+  const [aiInsight, setAiInsight] = useState<string>("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const moonInfo = useMemo(() => SunCalc.getMoonIllumination(date), [date]);
+  const calendarInfo = useMemo(() => getLunarCalendarInfo(date), [date]);
+
+  useEffect(() => {
+    const fetchAi = async () => {
+      if (moonInfo) {
+        setIsAiLoading(true);
+        const insight = await getAIInsight(moonInfo.phase);
+        setAiInsight(insight);
+        setIsAiLoading(false);
+      }
+    };
+    fetchAi();
+  }, [date, moonInfo]);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -39,6 +58,14 @@ const LunarCalendar = () => {
     newDate.setHours(12, 0, 0, 0);
     newDate.setDate(newDate.getDate() + offset);
     setDate(newDate);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value);
+    if (!isNaN(newDate.getTime())) {
+      newDate.setHours(12, 0, 0, 0);
+      setDate(newDate);
+    }
   };
 
   const getPhaseName = (phase: number) => {
@@ -74,9 +101,20 @@ const LunarCalendar = () => {
             <Compass size={24} className="logo-icon" />
             <h1>Lunar Sat</h1>
           </div>
-          <div className="location-tag">
-            <MapPin size={12} />
-            <span>{locationName}</span>
+          <div className="header-actions">
+            <div className="date-picker-wrapper">
+              <Calendar size={16} />
+              <input 
+                type="date" 
+                onChange={handleDateChange} 
+                value={date.toISOString().split('T')[0]}
+                className="hud-date-input"
+              />
+            </div>
+            <div className="location-tag hide-mobile">
+              <MapPin size={12} />
+              <span>{locationName}</span>
+            </div>
           </div>
         </header>
 
@@ -103,6 +141,46 @@ const LunarCalendar = () => {
               </button>
             </div>
 
+            <div className="ai-insight-panel">
+              <div className="panel-header">
+                <Bot size={14} className="ai-icon" />
+                <span>Lunar AI Assistant</span>
+              </div>
+              <p className={isAiLoading ? 'ai-loading' : ''}>
+                {isAiLoading ? "Processing lunar data..." : aiInsight}
+              </p>
+            </div>
+
+            <div className="calendar-expander">
+              <button className="expander-trigger" onClick={() => setShowCalendars(!showCalendars)}>
+                <span>System Calendars</span>
+                {showCalendars ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              </button>
+              <AnimatePresence>
+                {showCalendars && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="calendar-details"
+                  >
+                    <div className="cal-item">
+                      <span className="cal-label">Islamic</span>
+                      <span className="cal-value">{calendarInfo.islamic}</span>
+                    </div>
+                    <div className="cal-item">
+                      <span className="cal-label">Chinese</span>
+                      <span className="cal-value">{calendarInfo.chinese}</span>
+                    </div>
+                    <div className="cal-item">
+                      <span className="cal-label">Hindu</span>
+                      <span className="cal-value">{calendarInfo.hindu}</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="control-panel">
               <div className="scrubber-label">
                 <span>Temporal Scrubber</span>
@@ -126,7 +204,9 @@ const LunarCalendar = () => {
                 </span>
                 <span>+15D</span>
               </div>
-              <PhaseChart date={date} />
+              <div className="chart-wrapper hide-mobile">
+                <PhaseChart date={date} />
+              </div>
             </div>
           </div>
         </main>

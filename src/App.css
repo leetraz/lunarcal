@@ -223,41 +223,144 @@ body, html {
   color: var(--accent-color);
 }
 
-/* Desktop Sidebar Adaption */
-@media (min-width: 1024px) {
-  .hud-dashboard {
-    background: none;
-    position: absolute;
-    bottom: 2rem;
-    left: 2rem;
-    width: 380px;
-    padding: 0;
-  }
-  
-  .dashboard-grid {
-    margin: 0;
-  }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-/* Mobile Polish */
+.date-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--hud-bg);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  color: var(--text-secondary);
+}
+
+.hud-date-input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.75rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.hud-date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* AI Insight Panel */
+.ai-insight-panel {
+  background: rgba(142, 148, 242, 0.1);
+  border: 1px solid var(--accent-border);
+  border-radius: 16px;
+  padding: 1rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+.ai-icon {
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+}
+
+.ai-loading {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* Calendar Expander */
+.calendar-expander {
+  background: var(--hud-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.expander-trigger {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.calendar-details {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.5rem;
+}
+
+.cal-label {
+  font-size: 0.65rem;
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+.cal-value {
+  font-size: 0.7rem;
+  color: #fff;
+  text-align: right;
+}
+
+/* Mobile Adjustments */
 @media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+
   .hud-header {
     padding: 1rem;
   }
-  
+
+  .logo-group h1 {
+    font-size: 0.9rem;
+  }
+
+  .dashboard-grid {
+    gap: 1rem;
+  }
+
   .hud-dashboard {
-    padding: 1rem;
     padding-bottom: calc(1rem + var(--safe-area-bottom));
   }
-  
-  .phase-info h2 {
-    font-size: 1.25rem;
-  }
-  
-  .control-panel {
-    padding: 1rem;
-    border-radius: 20px;
-  }
+}
+
+.chart-wrapper {
+  margin-top: 1rem;
 }
 
 .live-indicator {
