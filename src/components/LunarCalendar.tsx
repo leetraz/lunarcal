@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera, Float } from '@react-three/drei';
 import SunCalc from 'suncalc';
 import Moon from './Moon';
-import { MapPin, Edit3, Compass, Clock, RotateCcw } from 'lucide-react';
+import { MapPin, Compass, Clock, RotateCcw } from 'lucide-react';
 
 const LunarCalendar = () => {
   // Source of truth is just the date
@@ -49,17 +49,6 @@ const LunarCalendar = () => {
     setDate(newDate);
   };
 
-  const handleManualDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value; // YYYY-MM-DD
-    if (!val) return;
-    
-    const parts = val.split('-');
-    const newDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
-    if (!isNaN(newDate.getTime())) {
-      setDate(newDate);
-    }
-  };
-
   const resetToToday = () => {
     const today = new Date();
     today.setHours(12, 0, 0, 0);
@@ -77,13 +66,6 @@ const LunarCalendar = () => {
     if (phase > 0.78 && phase < 0.97) return 'Waning Crescent';
     return 'Unknown';
   };
-
-  const dateInputStr = useMemo(() => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }, [date]);
 
   return (
     <div className="lunar-container full-display">
@@ -117,7 +99,7 @@ const LunarCalendar = () => {
           <nav className="info-panel scrollable">
             <section className="ui-group">
               <div className="group-header">
-                <label>Time Control</label>
+                <label>Temporal Navigation</label>
                 <button className="reset-btn" onClick={resetToToday} title="Reset to Today">
                   <RotateCcw size={14} />
                   <span>RESET</span>
@@ -127,7 +109,7 @@ const LunarCalendar = () => {
               <div className="scrubber-card">
                 <div className="scrubber-header">
                   <Clock size={16} />
-                  <span>Orbit Offset: {sliderValue > 0 ? `+${sliderValue}` : sliderValue} days</span>
+                  <span>{date.toLocaleDateString('en-GB').split('/').join(' - ')}</span>
                 </div>
                 <input 
                   type="range" 
@@ -138,31 +120,17 @@ const LunarCalendar = () => {
                   className="time-slider"
                 />
                 <div className="slider-labels">
-                  <span>-15 Days</span>
-                  <span className={`today-marker ${sliderValue === 0 ? 'active' : ''}`}>TODAY</span>
-                  <span>+15 Days</span>
+                  <span>-15 DAYS</span>
+                  <span className={`today-marker ${sliderValue === 0 ? 'active' : ''}`}>
+                    {sliderValue === 0 ? 'LIVE' : sliderValue > 0 ? `+${sliderValue}D` : `${sliderValue}D`}
+                  </span>
+                  <span>+15 DAYS</span>
                 </div>
               </div>
             </section>
 
             <section className="ui-group">
-              <label>Manual Target Date (DD-MM-YYYY)</label>
-              <div className="date-input-container">
-                <Edit3 size={18} className="input-icon-v2" />
-                <input 
-                  type="date" 
-                  value={dateInputStr} 
-                  onChange={handleManualDateChange}
-                  className="manual-date-input"
-                />
-              </div>
-              <div className="date-readout">
-                {date.toLocaleDateString('en-GB').split('/').join(' - ')}
-              </div>
-            </section>
-
-            <section className="ui-group">
-              <label>Lunar Status</label>
+              <label>Satellite Data</label>
               <div className="status-card">
                 <div className="status-header">
                   <span className="phase-badge">{moonInfo ? getPhaseName(moonInfo.phase) : '...'}</span>
