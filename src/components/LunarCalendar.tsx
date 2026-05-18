@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera, Float } from '@react-three/drei';
 import SunCalc from 'suncalc';
 import Moon from './Moon';
+import PhaseChart from './PhaseChart';
 import { MapPin, Compass, RotateCcw } from 'lucide-react';
 
 const LunarCalendar = () => {
@@ -12,13 +13,8 @@ const LunarCalendar = () => {
     return d;
   });
   
-  const [moonInfo, setMoonInfo] = useState<SunCalc.GetMoonIlluminationResult | null>(null);
+  const moonInfo = useMemo(() => SunCalc.getMoonIllumination(date), [date]);
   const [locationName, setLocationName] = useState<string>("Detecting...");
-
-  useEffect(() => {
-    const info = SunCalc.getMoonIllumination(date);
-    setMoonInfo(info);
-  }, [date]);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -122,6 +118,7 @@ const LunarCalendar = () => {
                 </span>
                 <span>+15D</span>
               </div>
+              <PhaseChart date={date} />
             </div>
           </div>
         </main>

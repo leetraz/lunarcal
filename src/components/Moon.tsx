@@ -12,8 +12,8 @@ const Moon = ({ phase }: MoonProps) => {
   
   // Using high-quality textures from the local public directory
   const textures = useTexture({
-    map: '/textures/moon_high_res.jpg',
-    bumpMap: '/textures/moon_high_res.jpg',
+    map: '/textures/moon.jpg',
+    bumpMap: '/textures/moon.jpg',
   });
 
   useFrame(() => {
@@ -23,8 +23,9 @@ const Moon = ({ phase }: MoonProps) => {
     }
   });
 
-  // Calculate lighting to match "Satellite View" (Harsh, high-contrast space lighting)
-  const angle = (phase - 0.5) * Math.PI * 2;
+  // Calculate lighting to match Northern Hemisphere observation
+  // Phase 0: New Moon (behind), 0.25: First Quarter (right), 0.5: Full (front), 0.75: Last Quarter (left)
+  const angle = (0.5 - phase) * Math.PI * 2;
   const lightDistance = 25;
   const lightX = Math.sin(angle) * lightDistance;
   const lightZ = Math.cos(angle) * lightDistance;
