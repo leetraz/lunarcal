@@ -3,10 +3,9 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera, Float } from '@react-three/drei';
 import SunCalc from 'suncalc';
 import Moon from './Moon';
-import { MapPin, Compass, Clock, RotateCcw } from 'lucide-react';
+import { MapPin, Compass, RotateCcw } from 'lucide-react';
 
 const LunarCalendar = () => {
-  // Source of truth is just the date
   const [date, setDate] = useState(() => {
     const d = new Date();
     d.setHours(12, 0, 0, 0);
@@ -14,26 +13,23 @@ const LunarCalendar = () => {
   });
   
   const [moonInfo, setMoonInfo] = useState<SunCalc.GetMoonIlluminationResult | null>(null);
-  const [locationName, setLocationName] = useState<string>("Detecting Location...");
+  const [locationName, setLocationName] = useState<string>("Detecting...");
 
-  // Update moon info whenever date changes
   useEffect(() => {
     const info = SunCalc.getMoonIllumination(date);
     setMoonInfo(info);
   }, [date]);
 
-  // Geolocation
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((position) => {
-        setLocationName(`${position.coords.latitude.toFixed(2)}°N, ${position.coords.longitude.toFixed(2)}°E`);
+        setLocationName(`${position.coords.latitude.toFixed(1)}°N, ${position.coords.longitude.toFixed(1)}°E`);
       }, () => {
-        setLocationName("Default Orbit (0°N, 0°E)");
+        setLocationName("Orbit Alpha");
       });
     }
   }, []);
 
-  // Derived slider value (days from today)
   const sliderValue = useMemo(() => {
     const today = new Date();
     today.setHours(12, 0, 0, 0);
@@ -49,12 +45,6 @@ const LunarCalendar = () => {
     setDate(newDate);
   };
 
-  const resetToToday = () => {
-    const today = new Date();
-    today.setHours(12, 0, 0, 0);
-    setDate(today);
-  };
-
   const getPhaseName = (phase: number) => {
     if (phase <= 0.03 || phase >= 0.97) return 'New Moon';
     if (phase > 0.03 && phase < 0.22) return 'Waxing Crescent';
@@ -64,114 +54,77 @@ const LunarCalendar = () => {
     if (phase > 0.53 && phase < 0.72) return 'Waning Gibbous';
     if (phase >= 0.72 && phase <= 0.78) return 'Last Quarter';
     if (phase > 0.78 && phase < 0.97) return 'Waning Crescent';
-    return 'Unknown';
+    return 'Analyzing';
   };
 
   return (
     <div className="lunar-container full-display">
       <div className="canvas-wrapper">
         <Canvas shadows gl={{ antialias: true }}>
-          <PerspectiveCamera makeDefault position={[0, 0, 12]} />
+          <PerspectiveCamera makeDefault position={[0, 0, 10]} />
           <Stars radius={250} depth={100} count={12000} factor={4} saturation={0} fade speed={0.1} />
-          
           <Suspense fallback={null}>
             <Float speed={1} rotationIntensity={0.2} floatIntensity={0.2}>
               {moonInfo && <Moon phase={moonInfo.phase} />}
             </Float>
           </Suspense>
-
-          <OrbitControls enablePan={false} minDistance={5} maxDistance={30} enableDamping />
+          <OrbitControls enablePan={false} minDistance={5} maxDistance={20} enableDamping />
         </Canvas>
       </div>
 
       <div className="ui-overlay">
-        <aside className="sidebar">
-          <header>
-            <div className="logo-area">
-              <Compass size={28} className="logo-icon" />
-              <div>
-                <h1>LUNAR SAT</h1>
-                <p className="subtitle">Precision Satellite Link</p>
+        <header className="hud-header">
+          <div className="logo-group">
+            <Compass size={24} className="logo-icon" />
+            <h1>Lunar Sat</h1>
+          </div>
+          <div className="location-tag">
+            <MapPin size={12} />
+            <span>{locationName}</span>
+          </div>
+        </header>
+
+        <main className="hud-dashboard">
+          <div className="dashboard-grid">
+            <div className="status-row">
+              <div className="phase-info">
+                <h2>{moonInfo ? getPhaseName(moonInfo.phase) : '---'}</h2>
+                <div className="date-readout">
+                  {date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' . ')}
+                </div>
+              </div>
+              <button className="reset-btn" onClick={() => setDate(new Date())}>
+                <RotateCcw size={14} />
+                <span>SYNC</span>
+              </button>
+            </div>
+
+            <div className="control-panel">
+              <div className="scrubber-label">
+                <span>Temporal Scrubber</span>
+                <div className="live-indicator-group">
+                  <div className="live-indicator"></div>
+                  <span style={{ fontSize: '0.6rem', marginLeft: '0.4rem' }}>LIVE FEED</span>
+                </div>
+              </div>
+              <input 
+                type="range" 
+                min="-15" 
+                max="15" 
+                value={sliderValue} 
+                onChange={handleSliderChange}
+                className="time-slider"
+              />
+              <div className="slider-markers">
+                <span>-15D</span>
+                <span className={sliderValue === 0 ? 'marker-now' : ''}>
+                  {sliderValue === 0 ? 'TODAY' : `${sliderValue > 0 ? '+' : ''}${sliderValue}D`}
+                </span>
+                <span>+15D</span>
               </div>
             </div>
-          </header>
-
-          <nav className="info-panel scrollable">
-            <section className="ui-group">
-              <div className="group-header">
-                <label>Temporal Navigation</label>
-                <button className="reset-btn" onClick={resetToToday} title="Reset to Today">
-                  <RotateCcw size={14} />
-                  <span>RESET</span>
-                </button>
-              </div>
-              
-              <div className="scrubber-card">
-                <div className="scrubber-header">
-                  <Clock size={16} />
-                  <span>{date.toLocaleDateString('en-GB').split('/').join(' - ')}</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="-15" 
-                  max="15" 
-                  value={sliderValue} 
-                  onChange={handleSliderChange}
-                  className="time-slider"
-                />
-                <div className="slider-labels">
-                  <span>-15 DAYS</span>
-                  <span className={`today-marker ${sliderValue === 0 ? 'active' : ''}`}>
-                    {sliderValue === 0 ? 'LIVE' : sliderValue > 0 ? `+${sliderValue}D` : `${sliderValue}D`}
-                  </span>
-                  <span>+15 DAYS</span>
-                </div>
-              </div>
-            </section>
-
-            <section className="ui-group">
-              <label>Satellite Data</label>
-              <div className="status-card">
-                <div className="status-header">
-                  <span className="phase-badge">{moonInfo ? getPhaseName(moonInfo.phase) : '...'}</span>
-                  <div className="live-indicator-small">
-                    <div className="dot"></div>
-                    <span>LINKED</span>
-                  </div>
-                </div>
-                <div className="illumination-meter">
-                  <div className="meter-label">
-                    <span>Luminosity</span>
-                    <span>{moonInfo ? (moonInfo.fraction * 100).toFixed(1) : 0}%</span>
-                  </div>
-                  <div className="meter-bar">
-                    <div 
-                      className="meter-fill" 
-                      style={{ width: `${moonInfo ? moonInfo.fraction * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="ui-group">
-              <label>Ground Station</label>
-              <div className="status-card location-card">
-                <MapPin size={18} className="card-icon" />
-                <div className="location-info">
-                  <span className="location-text">{locationName}</span>
-                </div>
-              </div>
-            </section>
-          </nav>
-
-          <footer>
-            <div className="footer-item">
-              <div className="live-indicator"></div>
-              <span>Encrypted Satellite Uplink</span>
-            </div>
-          </footer>
-        </aside>
+          </div>
+        </main>
       </div>
     </div>
   );
