@@ -202,10 +202,6 @@ const LunarCalendar = () => {
                       <span className="cal-value">{calendarInfo.islamic}</span>
                     </div>
                     <div className="cal-item">
-                      <span className="cal-label">Chinese Lunar</span>
-                      <span className="cal-value">{calendarInfo.chinese}</span>
-                    </div>
-                    <div className="cal-item">
                       <span className="cal-label">Hindu (Panchang)</span>
                       <span className="cal-value">{calendarInfo.hindu}</span>
                     </div>

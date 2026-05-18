@@ -3,7 +3,6 @@ import { Lunar } from 'lunar-typescript';
 
 export interface LunarDateInfo {
   islamic: string;
-  chinese: string;
   hindu: string;
 }
 
@@ -27,15 +26,12 @@ export const getLunarCalendarInfo = (date: Date): LunarDateInfo => {
     }).format(date);
   }
 
-  // Chinese Lunar
-  const lunar = Lunar.fromDate(date);
-  const chinese = `${lunar.getYearInGanZhi()} (${lunar.getYearShengXiao()}), ${lunar.getMonthInChinese()} Month, Day ${lunar.getDayInChinese()}`;
-
   // Hindu Calendar
+  const lunar = Lunar.fromDate(date);
   const tithi = Math.floor(lunar.getDay());
   const hindu = `Vikram Samvat ${dt.year + 57}, Tithi ${tithi}`;
 
-  return { islamic, chinese, hindu };
+  return { islamic, hindu };
 };
 
 export const getAIInsight = async (phase: number) => {
